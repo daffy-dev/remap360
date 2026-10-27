@@ -1,6 +1,6 @@
 // Renders the app icon and logo assets from Sources/Remap360/Views/Brand.swift.
 // Built by scripts/bundle.sh: swiftc scripts/make-icon.swift Sources/Remap360/Views/Brand.swift
-// Usage: make-icon <out-dir>   → <out-dir>/AppIcon.iconset, logo-mark.png, wordmark-dark.png, wordmark-light.png
+// Usage: make-icon <out-dir>   → <out-dir>/AppIcon.iconset, logo-mark.png, wordmark-*.png, dmg-background*.png
 import AppKit
 import SwiftUI
 
@@ -28,6 +28,8 @@ func run() throws {
         .write(to: out.appendingPathComponent("wordmark-dark.png"))
     try png(Wordmark(height: 120).padding(40).environment(\.colorScheme, .light).background(Color.white), scale: 2)
         .write(to: out.appendingPathComponent("wordmark-light.png"))
+    try png(DMGBackground()).write(to: out.appendingPathComponent("dmg-background.png"))
+    try png(DMGBackground(), scale: 2).write(to: out.appendingPathComponent("dmg-background@2x.png"))
 }
 
 @main

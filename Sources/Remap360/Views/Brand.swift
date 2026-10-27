@@ -135,3 +135,61 @@ struct AppIconArtwork: View {
         .frame(width: 1024, height: 1024)
     }
 }
+
+/// Background for the installer DMG window (660×400 points). Finder draws the app and
+/// Applications icons on top at (170, 205) and (490, 205).
+struct DMGBackground: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [Brand.night, Brand.ink], startPoint: .top, endPoint: .bottom)
+            RadialGradient(colors: [Brand.cyan.opacity(0.30), .clear], center: UnitPoint(x: 0.15, y: 0.05),
+                           startRadius: 0, endRadius: 420)
+            RadialGradient(colors: [Brand.lime.opacity(0.16), .clear], center: UnitPoint(x: 0.95, y: 1.0),
+                           startRadius: 0, endRadius: 380)
+
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    Text("Remap").foregroundStyle(.white)
+                    Text("360").foregroundStyle(Brand.horizontal)
+                }
+                .font(.system(size: 34, weight: .heavy, design: .rounded))
+                .padding(.top, 30)
+                Spacer()
+                Text("Drag Remap360 into Applications to install")
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .padding(.bottom, 34)
+            }
+
+            // Light cards under the two icons: Finder draws the item names in black,
+            // so they need a light surface to stay readable.
+            ForEach([170.0, 490.0], id: \.self) { x in
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .fill(LinearGradient(colors: [Color(white: 0.96), Color(red: 0.86, green: 0.93, blue: 0.92)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .overlay(RoundedRectangle(cornerRadius: 30, style: .continuous).strokeBorder(.white.opacity(0.6)))
+                    .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
+                    .frame(width: 176, height: 176)
+                    .position(x: x, y: 216)
+            }
+
+            // Arrow from the app to Applications.
+            Canvas { ctx, _ in
+                var shaft = Path()
+                shaft.move(to: CGPoint(x: 272, y: 205))
+                shaft.addLine(to: CGPoint(x: 376, y: 205))
+                ctx.stroke(shaft, with: .linearGradient(Gradient(colors: Brand.gradientColors),
+                                                        startPoint: CGPoint(x: 272, y: 0), endPoint: CGPoint(x: 390, y: 0)),
+                           style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                var head = Path()
+                head.move(to: CGPoint(x: 392, y: 205))
+                head.addLine(to: CGPoint(x: 372, y: 191))
+                head.addLine(to: CGPoint(x: 372, y: 219))
+                head.closeSubpath()
+                ctx.fill(head, with: .color(Brand.lime))
+            }
+        }
+        .frame(width: 660, height: 400)
+        .environment(\.colorScheme, .dark)
+    }
+}

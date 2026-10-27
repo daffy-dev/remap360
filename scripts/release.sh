@@ -25,8 +25,45 @@ echo "▸ Creating DMG"
 rm -rf "$OUT" && mkdir -p "$OUT/dmg"
 cp -R "$APP" "$OUT/dmg/"
 ln -s /Applications "$OUT/dmg/Applications"
-hdiutil create -volname "Remap360 $VERSION" -srcfolder "$OUT/dmg" -ov -format UDZO "$DMG" >/dev/null
-rm -rf "$OUT/dmg"
+mkdir "$OUT/dmg/.background"
+tiffutil -cathidpicheck "$ROOT/build/brand/dmg-background.png" "$ROOT/build/brand/dmg-background@2x.png" \
+    -out "$OUT/dmg/.background/background.tiff" >/dev/null
+cp "$ROOT/build/AppIcon.icns" "$OUT/dmg/.VolumeIcon.icns"
+
+# Lay out the window with Finder on a writable image, then compress it.
+VOL="Remap360"
+[ -d "/Volumes/$VOL" ] && hdiutil detach "/Volumes/$VOL" -force -quiet || true
+hdiutil create -srcfolder "$OUT/dmg" -volname "$VOL" -fs HFS+ -format UDRW -ov "$OUT/rw.dmg" >/dev/null
+hdiutil attach "$OUT/rw.dmg" -readwrite -noverify -noautoopen -quiet
+xcrun SetFile -a C "/Volumes/$VOL"
+osascript <<APPLESCRIPT
+tell application "Finder"
+    tell disk "$VOL"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        try
+            set pathbar visible of container window to false
+        end try
+        set bounds of container window to {200, 120, 860, 548}
+        set opts to icon view options of container window
+        set arrangement of opts to not arranged
+        set icon size of opts to 120
+        set text size of opts to 13
+        set background picture of opts to file ".background:background.tiff"
+        set position of item "Remap360.app" of container window to {170, 205}
+        set position of item "Applications" of container window to {490, 205}
+        update without registering applications
+        delay 1
+        close
+    end tell
+end tell
+APPLESCRIPT
+sync
+hdiutil detach "/Volumes/$VOL" -quiet
+hdiutil convert "$OUT/rw.dmg" -format UDZO -imagekey zlib-level=9 -o "$DMG" >/dev/null
+rm -rf "$OUT/dmg" "$OUT/rw.dmg"
 codesign --sign "$DEVELOPER_ID" --timestamp "$DMG"
 
 echo "▸ Notarizing with Apple (takes a few minutes)"

@@ -99,6 +99,8 @@ struct Wordmark: View {
             }
             .font(.system(size: height * 0.62, weight: .heavy, design: .rounded))
             .tracking(-height * 0.012)
+            .lineLimit(1)
+            .fixedSize()
         }
     }
 }

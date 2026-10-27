@@ -19,7 +19,19 @@ struct Remap360App: App {
             CommandGroup(replacing: .saveItem) {
                 Button("Save") { model.save() }
                     .keyboardShortcut("s")
-                    .disabled(!model.isDirty)
+                    .disabled(!model.hasUnsavedChanges)
+            }
+            CommandGroup(replacing: .importExport) {
+                Button("Export Layout…") { model.exportLayout() }
+                    .keyboardShortcut("e", modifiers: [.command, .shift])
+                    .disabled(!model.hasContent)
+                Button("Import Layout…") { model.importLayout() }
+                    .keyboardShortcut("i", modifiers: [.command, .shift])
+                    .disabled(!model.hasContent)
+                Button("Show Layout Backups") {
+                    try? FileManager.default.createDirectory(at: AppModel.layoutBackupsDir, withIntermediateDirectories: true)
+                    NSWorkspace.shared.open(AppModel.layoutBackupsDir)
+                }
             }
             CommandGroup(after: .toolbar) {
                 Toggle("Key Labels Follow \(model.macLayoutName) Layout", isOn: Binding(

@@ -93,6 +93,8 @@ final class AppModel {
                 selectedLayerID = liveLayers[l].id
             }
             flash("\(live.deviceName ?? "Keyboard") connected")
+            // Snapshot the layout as found, so there's always a copy to go back to.
+            if !live.unsaved { backupLayout() }
         }
         if isLive && selectedLayerIndex == nil { selectedLayerID = liveLayers.first?.id }
     }
@@ -138,6 +140,7 @@ final class AppModel {
             Task {
                 do {
                     try await live.save()
+                    backupLayout()
                     flash("Saved to keyboard")
                 } catch {
                     loadError = error.localizedDescription
@@ -397,6 +400,107 @@ final class AppModel {
             return
         }
         mutate("Clear Layer") { d in d.layers[idx].bindings = d.layers[idx].bindings.map { _ in blank } }
+    }
+
+    // MARK: Layout files (export, import, backups)
+
+    static var layoutBackupsDir: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Remap360/Layout Backups")
+    }
+
+    var currentLayoutFile: LayoutFile {
+        LayoutFile(keyboard: live.deviceName ?? "Adv360 Pro", layers: activeLayers)
+    }
+
+    /// Saved automatically whenever changes are kept on the keyboard; keeps the newest 100.
+    func backupLayout() {
+        guard !activeLayers.isEmpty, let data = try? currentLayoutFile.encoded() else { return }
+        let fm = FileManager.default
+        let dir = Self.layoutBackupsDir
+        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        let stamp = ISO8601DateFormatter().string(from: .now).replacingOccurrences(of: ":", with: "-")
+        try? data.write(to: dir.appendingPathComponent("layout-\(stamp).json"))
+        let old = ((try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? [])
+            .filter { $0.pathExtension == "json" }
+            .sorted { $0.lastPathComponent > $1.lastPathComponent }
+            .dropFirst(100)
+        for url in old { try? fm.removeItem(at: url) }
+    }
+
+    func exportLayout() {
+        guard !activeLayers.isEmpty else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        let date = Date.now.formatted(.iso8601.year().month().day())
+        panel.nameFieldStringValue = "Adv360 Layout \(date).json"
+        panel.message = "Save your whole layout. You can put it back on the keyboard any time with Import."
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try currentLayoutFile.encoded().write(to: url)
+            flash("Layout exported")
+        } catch {
+            loadError = error.localizedDescription
+        }
+    }
+
+    func importLayout(from url: URL? = nil) {
+        var target = url
+        if target == nil {
+            let panel = NSOpenPanel()
+            panel.allowedContentTypes = [.json]
+            panel.directoryURL = Self.layoutBackupsDir
+            panel.message = "Choose a layout to put on your keyboard. You can still Revert afterwards."
+            guard panel.runModal() == .OK else { return }
+            target = panel.url
+        }
+        guard let target else { return }
+        do {
+            let file = try LayoutFile.decode(Data(contentsOf: target))
+            apply(file)
+        } catch {
+            loadError = error.localizedDescription
+        }
+    }
+
+    /// Puts a layout file onto the keyboard (or into the config file), adding layers if needed.
+    private func apply(_ file: LayoutFile) {
+        if isLive {
+            Task {
+                var skipped = 0
+                for i in file.layers.indices {
+                    if i >= liveLayers.count {
+                        do { _ = try await live.addLayer(named: file.layers[i].name) } catch { break }
+                    } else if liveLayers[i].displayName != file.layers[i].name {
+                        try? await live.renameLayer(at: i, to: file.layers[i].name)
+                    }
+                    let wanted = file.bindings(ofLayer: i)
+                    for (k, b) in wanted.enumerated() where k < liveLayers[i].bindings.count && liveLayers[i].bindings[k] != b {
+                        do { try await live.setBinding(b, layer: i, key: k) } catch { skipped += 1 }
+                    }
+                }
+                undoManager?.removeAllActions()
+                selectedLayerID = liveLayers.first?.id
+                flash(skipped == 0
+                      ? "Layout imported. Try it, then Keep Changes"
+                      : "Imported, but \(skipped) key\(skipped == 1 ? "" : "s") use things this keyboard's firmware doesn't have")
+            }
+            return
+        }
+        guard document != nil else { return }
+        mutate("Import Layout") { d in
+            for (i, entry) in file.layers.enumerated() {
+                let bindings = file.bindings(ofLayer: i)
+                if i < d.activeLayers.count {
+                    d.layers[i].displayName = entry.name
+                    d.layers[i].bindings = bindings
+                } else {
+                    d.layers.insert(Layer(nodeName: d.uniqueNodeName(for: entry.name), displayName: entry.name, bindings: bindings),
+                                    at: d.insertionIndex)
+                }
+            }
+        }
+        flash("Layout imported into the config file")
     }
 
     // MARK: Presets

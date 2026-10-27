@@ -11,11 +11,15 @@ struct LayerSidebar: View {
         let reserved = model.layers.filter(\.isReserved).count
 
         VStack(spacing: 0) {
-            Wordmark(height: 26)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .padding(.top, 6)
-                .padding(.bottom, 4)
+            // The wordmark is about 5× as wide as it is tall; size it to span the sidebar.
+            GeometryReader { geo in
+                Wordmark(height: geo.size.width / 5.0)
+                    .frame(width: geo.size.width, alignment: .center)
+            }
+            .aspectRatio(5.0, contentMode: .fit)
+            .padding(.horizontal, 18)
+            .padding(.top, 10)
+            .padding(.bottom, 10)
             List(selection: $model.selectedLayerID) {
                 Section {
                     ForEach(Array(active.enumerated()), id: \.element.id) { i, layer in
@@ -194,6 +198,13 @@ private struct LiveFooter: View {
                     Button("Revert to Saved Layout") { model.revertLive() }
                         .disabled(!model.live.unsaved)
                     Button("Reload from Keyboard") { Task { await model.live.load() } }
+                    Divider()
+                    Button("Export Layout…") { model.exportLayout() }
+                    Button("Import Layout…") { model.importLayout() }
+                    Button("Show Layout Backups") {
+                        try? FileManager.default.createDirectory(at: AppModel.layoutBackupsDir, withIntermediateDirectories: true)
+                        NSWorkspace.shared.open(AppModel.layoutBackupsDir)
+                    }
                     Divider()
                     Button("Disconnect") { model.live.disconnect() }
                 } label: {

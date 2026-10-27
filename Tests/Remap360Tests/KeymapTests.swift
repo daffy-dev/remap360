@@ -75,3 +75,15 @@ private func fixture(_ name: String) throws -> String {
     #expect(Adv360Layout.keys.filter(\.isLeft).count == 38)
     #expect(Adv360Layout.neighbor(of: 15, dx: 1, dy: 0) == 16)
 }
+
+@Test func layoutFileRoundTrip() throws {
+    let doc = try KeymapDocument(text: fixture("adv360.keymap"))
+    let file = LayoutFile(keyboard: "Adv360 Pro", layers: doc.activeLayers, savedAt: Date(timeIntervalSince1970: 0))
+    let data = try file.encoded()
+    let back = try LayoutFile.decode(data)
+    #expect(back == file)
+    #expect(back.layers.map(\.name) == ["Base", "Kp", "Fn", "Mod"])
+    #expect(back.bindings(ofLayer: 0) == doc.layers[0].bindings)
+    #expect(String(decoding: data, as: UTF8.self).contains("\"&kp EQUAL\""))
+    #expect(throws: LayoutFile.ReadError.self) { try LayoutFile.decode(Data("{}".utf8)) }
+}

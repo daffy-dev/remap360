@@ -46,6 +46,7 @@ struct Remap360App: App {
                     .keyboardShortcut("k", modifiers: [.command, .shift])
                     .disabled(model.document == nil)
                 Divider()
+                Button("Check for Firmware Updates") { Task { await model.checkFirmware(manual: true) } }
                 Button("Test Pad…") { model.showTestPad = true }
                     .keyboardShortcut("t")
                 Button("Add Mac Row to Fn Layer") { model.addMacRow() }

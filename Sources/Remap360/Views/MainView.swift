@@ -107,14 +107,11 @@ private struct EditorCanvas: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        Group {
-            if model.isLive && model.live.status != .ready {
-                LiveStatusView()
-            } else if !model.isLive && model.document == nil {
-                NoConfigView()
-            } else {
-                editor
+        VStack(spacing: 0) {
+            if let update = model.firmwareUpdate {
+                FirmwareBanner(update: update)
             }
+            content
         }
         .background(
             ZStack {
@@ -125,6 +122,18 @@ private struct EditorCanvas: View {
                     .animation(.easeInOut(duration: 0.35), value: model.selectedLayerIndex)
             }
         )
+    }
+
+    @ViewBuilder private var content: some View {
+        Group {
+            if model.isLive && model.live.status != .ready {
+                LiveStatusView()
+            } else if !model.isLive && model.document == nil {
+                NoConfigView()
+            } else {
+                editor
+            }
+        }
     }
 
     private var editor: some View {
@@ -350,5 +359,38 @@ private struct LayoutMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help("Key labels show what each key types on your Mac's keyboard layout")
+    }
+}
+
+/// Shown when Kinesis has published firmware newer than what the user has seen.
+private struct FirmwareBanner: View {
+    @Environment(AppModel.self) private var model
+    let update: FirmwareUpdates.Release
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Brand.ink)
+                .frame(width: 28, height: 28)
+                .background(Brand.gradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            VStack(alignment: .leading, spacing: 1) {
+                Text("New Advantage360 firmware from Kinesis")
+                    .font(.callout.weight(.semibold))
+                Text("\(update.date.formatted(date: .long, time: .omitted)) · \(update.title)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Button("What's New") { NSWorkspace.shared.open(update.url) }
+            Button("Dismiss") { model.dismissFirmwareUpdate() }
+                .help("Hide until the next firmware release")
+        }
+        .controlSize(.small)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Brand.emerald.opacity(0.10))
+        .overlay(alignment: .bottom) { Divider() }
     }
 }

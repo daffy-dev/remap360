@@ -56,6 +56,9 @@ final class AppModel {
     }
     var macLayoutName: String { macLayout?.name ?? "Mac layout" }
 
+    /// A Kinesis firmware release newer than what the user has seen, shown as a banner.
+    var firmwareUpdate: FirmwareUpdates.Release?
+
     @ObservationIgnored weak var undoManager: UndoManager?
     @ObservationIgnored private var toastTask: Task<Void, Never>?
 
@@ -69,6 +72,7 @@ final class AppModel {
             MainActor.assumeIsolated { self?.macLayout = KeyboardLayoutLabels.current() }
         }
         live.start()
+        Task { await checkFirmware(manual: false) }
         // `-selectLayer 2 -selectKey 15` on the command line preselects a key (handy for screenshots).
         let defaults = UserDefaults.standard
         if let l = defaults.string(forKey: "selectLayer").flatMap(Int.init), l < layers.count { selectedLayerID = layers[l].id }
@@ -400,6 +404,35 @@ final class AppModel {
             return
         }
         mutate("Clear Layer") { d in d.layers[idx].bindings = d.layers[idx].bindings.map { _ in blank } }
+    }
+
+    // MARK: Firmware updates
+
+    /// Checks at most once a day automatically; the menu command always checks.
+    func checkFirmware(manual: Bool) async {
+        if !manual, let last = FirmwareUpdates.lastCheck, Date.now.timeIntervalSince(last) < 20 * 3600 {
+            if let seen = FirmwareUpdates.lastSeen, let cached = firmwareUpdate, cached.date <= seen { firmwareUpdate = nil }
+            return
+        }
+        guard let latest = await FirmwareUpdates.latest() else {
+            if manual { flash("Couldn't reach GitHub to check for updates") }
+            return
+        }
+        FirmwareUpdates.lastCheck = .now
+        if FirmwareUpdates.lastSeen == nil { FirmwareUpdates.lastSeen = latest.date }
+        if let seen = FirmwareUpdates.lastSeen, latest.date > seen {
+            firmwareUpdate = latest
+        } else {
+            firmwareUpdate = nil
+            if manual {
+                flash("Firmware is up to date (latest from Kinesis: \(latest.date.formatted(date: .abbreviated, time: .omitted)))")
+            }
+        }
+    }
+
+    func dismissFirmwareUpdate() {
+        if let update = firmwareUpdate { FirmwareUpdates.lastSeen = update.date }
+        firmwareUpdate = nil
     }
 
     // MARK: Layout files (export, import, backups)

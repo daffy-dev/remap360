@@ -14,7 +14,6 @@ enum FirmwareUpdates {
     static let watchedPaths = ["config/west.yml", "config/boards"]
 
     private static let seenKey = "firmwareLastSeenDate"
-    private static let checkedKey = "firmwareLastCheck"
 
     /// Newest firmware-relevant commit, or nil when GitHub can't be reached.
     static func latest() async -> Release? {
@@ -43,11 +42,6 @@ enum FirmwareUpdates {
     static var lastSeen: Date? {
         get { UserDefaults.standard.object(forKey: seenKey) as? Date }
         set { UserDefaults.standard.set(newValue, forKey: seenKey) }
-    }
-
-    static var lastCheck: Date? {
-        get { UserDefaults.standard.object(forKey: checkedKey) as? Date }
-        set { UserDefaults.standard.set(newValue, forKey: checkedKey) }
     }
 
     private struct Commit: Decodable {

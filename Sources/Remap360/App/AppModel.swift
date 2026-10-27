@@ -408,17 +408,12 @@ final class AppModel {
 
     // MARK: Firmware updates
 
-    /// Checks at most once a day automatically; the menu command always checks.
+    /// Runs every time the app starts (it isn't kept running), and from the menu on demand.
     func checkFirmware(manual: Bool) async {
-        if !manual, let last = FirmwareUpdates.lastCheck, Date.now.timeIntervalSince(last) < 20 * 3600 {
-            if let seen = FirmwareUpdates.lastSeen, let cached = firmwareUpdate, cached.date <= seen { firmwareUpdate = nil }
-            return
-        }
         guard let latest = await FirmwareUpdates.latest() else {
             if manual { flash("Couldn't reach GitHub to check for updates") }
             return
         }
-        FirmwareUpdates.lastCheck = .now
         if FirmwareUpdates.lastSeen == nil { FirmwareUpdates.lastSeen = latest.date }
         if let seen = FirmwareUpdates.lastSeen, latest.date > seen {
             firmwareUpdate = latest

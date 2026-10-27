@@ -31,9 +31,10 @@ enum Theme {
         switch style {
         case .key, .transparent, .none: nil
         case .modifier: Brand.cyan
-        case .layer: layer.map(layerColor) ?? accent
+        // One colour per kind of key so they're easy to tell apart; layer badges keep the LED colours.
+        case .layer: Brand.violet
         case .holdTap: Brand.amber
-        case .system: Brand.sky
+        case .system: Brand.rose
         case .macro: Brand.lime
         case .unknown: Color.gray
         }

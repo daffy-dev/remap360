@@ -11,6 +11,8 @@ enum Brand {
     static let lime = Color(red: 0.714, green: 0.953, blue: 0.361)     // #B6F35C
     static let amber = Color(red: 1.000, green: 0.710, blue: 0.278)    // #FFB547
     static let sky = Color(red: 0.353, green: 0.722, blue: 1.000)      // #5AB8FF
+    static let violet = Color(red: 0.655, green: 0.545, blue: 0.980)   // #A78BFA
+    static let rose = Color(red: 0.984, green: 0.443, blue: 0.522)     // #FB7185
 
     static let gradientColors = [cyan, emerald, lime]
     static let gradient = LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)

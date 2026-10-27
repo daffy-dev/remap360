@@ -26,7 +26,9 @@ Plug in, click a key, change it, and it's live on your keyboard instantly.</p>
 
 ## Install
 
-Download the latest release from the [Releases page](https://github.com/daffy-dev/remap360/releases), or build it yourself:
+**[Download Remap360.dmg](https://github.com/daffy-dev/remap360/releases/latest/download/Remap360.dmg)**, open it and drag Remap360 into Applications. It's signed and notarized, and runs on Apple Silicon and Intel.
+
+Or build it yourself:
 
 ```sh
 git clone https://github.com/daffy-dev/remap360.git

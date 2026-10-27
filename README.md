@@ -8,7 +8,7 @@ Plug in, click a key, change it, and it's live on your keyboard instantly.</p>
 ## Features
 
 - **Live editing over USB.** Changes are on the keyboard the moment you make them. Try them, then **Keep Changes** or **Revert**.
-- **Your keyboard language on the keycaps.** Legends follow the Mac's keyboard layout (German, French, Nordic, Icelandic…), including the Shift and Option characters in the corners.
+- **Your keyboard language on the keycaps.** Legends follow the Mac's keyboard layout (English, German, French, Nordic, Icelandic…), including the Shift and Option characters in the corners.
 - **Mac shortcuts built in.** Mission Control, Spotlight, Show Desktop, Screenshot, Lock Screen, Emoji and more, plus volume, brightness and media keys.
 - **One-click presets.** Add a MacBook-style top row (brightness, Mission Control, media, volume) to your Fn layer.
 - **Test Pad.** Press keys and see exactly what your Mac receives, and which key on which layer sent it.

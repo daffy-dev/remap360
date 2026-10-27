@@ -34,6 +34,8 @@ cd remap360
 scripts/bundle.sh --install   # builds Remap360.app and copies it to /Applications
 ```
 
+Maintainers: `scripts/release.sh` builds a signed, notarized, universal DMG in `build/release/`.
+
 Building needs Xcode 16 or newer.
 
 ## How to use it

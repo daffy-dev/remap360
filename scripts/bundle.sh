@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Builds Remap360 in release mode and wraps it into build/Remap360.app.
 # Usage: scripts/bundle.sh [--install]   (--install copies the app to /Applications)
+# Env:   SIGN_IDENTITY="Developer ID Application: …"  sign for distribution (hardened runtime)
+#        UNIVERSAL=1                                  build for Apple Silicon and Intel
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -9,8 +11,10 @@ VERSION="1.0.0"
 BUILD=$(git rev-list --count HEAD 2>/dev/null || echo 1)
 APP="$ROOT/build/Remap360.app"
 
-swift build -c release
-BIN=$(swift build -c release --show-bin-path)/Remap360
+ARCHS=()
+if [ "${UNIVERSAL:-0}" = 1 ]; then ARCHS=(--arch arm64 --arch x86_64); fi
+swift build -c release "${ARCHS[@]}"
+BIN=$(swift build -c release "${ARCHS[@]}" --show-bin-path)/Remap360
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -46,7 +50,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-codesign --force --deep --sign - "$APP" >/dev/null
+if [ -n "${SIGN_IDENTITY:-}" ]; then
+    codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP"
+else
+    codesign --force --deep --sign - "$APP" >/dev/null
+fi
 echo "Built $APP"
 
 if [ "${1:-}" = "--install" ]; then

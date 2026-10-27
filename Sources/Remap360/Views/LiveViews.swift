@@ -91,7 +91,10 @@ struct LiveStatusView: View {
             VStack(alignment: .leading, spacing: 10) {
                 hint("cable.connector.horizontal", "Use a data cable. Some charging-only cables don't carry data.")
                 hint("xmark.app", "Quit ZMK Studio if it's open. Only one app can talk to the keyboard at a time.")
-                hint("arrow.down.circle", "Still not found? Your keyboard may need a one-time firmware update to turn on live editing. Switch to **Config File** and use **Build & Flash**.")
+                hint("arrow.down.circle", "Still not found? Your keyboard may need Kinesis' one-time firmware update that turns on live editing (it's called “Clique” firmware).")
+                Link("How to update (kinesis-ergo.com) →", destination: URL(string: "https://kinesis-ergo.com/360p-clique-upgrade/")!)
+                    .font(.callout.weight(.medium))
+                    .padding(.leading, 30)
             }
             .frame(maxWidth: 520)
             .padding(16)

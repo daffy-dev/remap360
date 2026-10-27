@@ -88,13 +88,15 @@ struct MainView: View {
                 Button { model.save() } label: { Label("Save", systemImage: "square.and.arrow.down") }
                     .disabled(!model.isDirty)
                     .help("Save keymap (⌘S)")
-                Button { model.showFlashSheet = true } label: {
-                    Label("Build & Flash", systemImage: "bolt.fill")
-                        .labelStyle(.titleAndIcon)
+                if model.firmwareToolsEnabled {
+                    Button { model.showFlashSheet = true } label: {
+                        Label("Build & Flash", systemImage: "bolt.fill")
+                            .labelStyle(.titleAndIcon)
+                    }
+                    .buttonStyle(.brand)
+                    .disabled(model.document == nil)
+                    .help("Build firmware and install it on your keyboard (⌘B, experimental)")
                 }
-                .buttonStyle(.brand)
-                .disabled(model.document == nil)
-                .help("Build firmware and install it on your keyboard (⌘B)")
             }
             Button { showInspector.toggle() } label: { Label("Inspector", systemImage: "sidebar.right") }
                 .help("Show or hide the key editor")

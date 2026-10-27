@@ -16,6 +16,9 @@ struct Remap360App: App {
         .defaultSize(width: 1440, height: 860)
         .windowToolbarStyle(.unified)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Remap360") { AboutPanel.show() }
+            }
             CommandGroup(replacing: .saveItem) {
                 Button("Save") { model.save() }
                     .keyboardShortcut("s")
@@ -39,9 +42,13 @@ struct Remap360App: App {
                     .keyboardShortcut("l", modifiers: [.command, .option])
             }
             CommandMenu("Keyboard") {
-                Button("Build & Flash…") { model.showFlashSheet = true }
-                    .keyboardShortcut("b")
-                    .disabled(model.document == nil)
+                if model.firmwareToolsEnabled {
+                    Button("Build & Flash…") { model.showFlashSheet = true }
+                        .keyboardShortcut("b")
+                        .disabled(model.document == nil)
+                }
+                Toggle("Experimental Firmware Tools (needs Docker)", isOn: Binding(
+                    get: { model.firmwareToolsEnabled }, set: { model.firmwareToolsEnabled = $0 }))
                 Button("View Keymap Code") { model.showSourceSheet = true }
                     .keyboardShortcut("k", modifiers: [.command, .shift])
                     .disabled(model.document == nil)

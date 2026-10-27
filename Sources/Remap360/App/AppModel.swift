@@ -56,6 +56,11 @@ final class AppModel {
     }
     var macLayoutName: String { macLayout?.name ?? "Mac layout" }
 
+    /// Building and flashing firmware (via Docker) is experimental and hidden unless turned on.
+    var firmwareToolsEnabled = UserDefaults.standard.bool(forKey: "firmwareToolsEnabled") {
+        didSet { UserDefaults.standard.set(firmwareToolsEnabled, forKey: "firmwareToolsEnabled") }
+    }
+
     /// A Kinesis firmware release newer than what the user has seen, shown as a banner.
     var firmwareUpdate: FirmwareUpdates.Release?
 

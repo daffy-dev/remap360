@@ -1,20 +1,32 @@
 import Carbon
 import Foundation
-import Remap360Core
 
 /// Asks macOS what each key position types in the currently selected keyboard layout
 /// (Icelandic, German, ...), so keycaps show Æ instead of the US `;`.
-enum KeyboardLayoutLabels {
-    struct Result {
-        var name: String
-        var labels: [String: String]
-        var shifted: [String: String]
-        var option: [String: String]
+public enum KeyboardLayoutLabels {
+    public struct Result: Sendable {
+        public var name: String
+        public var labels: [String: String]
+        public var shifted: [String: String]
+        public var option: [String: String]
     }
 
-    static func current() -> Result? {
-        guard let source = TISCopyCurrentKeyboardLayoutInputSource()?.takeRetainedValue(),
-              let dataPtr = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else { return nil }
+    public static func current() -> Result? {
+        guard let source = TISCopyCurrentKeyboardLayoutInputSource()?.takeRetainedValue() else { return nil }
+        return labels(for: source)
+    }
+
+    /// Every keyboard layout macOS ships, by input source ID (e.g. com.apple.keylayout.German).
+    /// Reading a layout doesn't select it, so this never changes the user's keyboard.
+    public static func layout(id: String) -> Result? {
+        let filter = [kTISPropertyInputSourceID as String: id] as CFDictionary
+        guard let list = TISCreateInputSourceList(filter, true)?.takeRetainedValue() as? [TISInputSource],
+              let source = list.first else { return nil }
+        return labels(for: source)
+    }
+
+    static func labels(for source: TISInputSource) -> Result? {
+        guard let dataPtr = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else { return nil }
         let name = TISGetInputSourceProperty(source, kTISPropertyLocalizedName)
             .map { Unmanaged<CFString>.fromOpaque($0).takeUnretainedValue() as String } ?? "Keyboard layout"
         let layoutData = Unmanaged<CFData>.fromOpaque(dataPtr).takeUnretainedValue() as Data
@@ -44,7 +56,9 @@ enum KeyboardLayoutLabels {
         for def in Keycodes.all where printable.contains(def.category) {
             guard let mac = def.macKeyCode, let typed = type(mac, shift: false) else { continue }
             // Letters (including Æ, Ð, Ö, Þ on symbol positions) are shown uppercase like keycaps.
-            let label = typed.allSatisfy(\.isLetter) ? typed.uppercased() : typed
+            // Uppercase like a keycap, but not when that changes length (German ß → "SS").
+            let upper = typed.uppercased()
+            let label = typed.allSatisfy(\.isLetter) && upper.count == typed.count ? upper : typed
             if label != def.label { labels[def.code] = label }
         }
         // Shifted symbols (`AT` = Shift+2) follow the layout too: on Icelandic Shift+2 types ".
@@ -64,5 +78,5 @@ enum KeyboardLayoutLabels {
     }
 
     /// Posted by macOS when the user switches keyboard layout from the menu bar.
-    static let changedNotification = Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
+    public static let changedNotification = Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String)
 }

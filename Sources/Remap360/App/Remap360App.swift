@@ -38,6 +38,8 @@ struct Remap360App: App {
                     .keyboardShortcut("t")
                 Button("Add Mac Row to Fn Layer") { model.addMacRow() }
                     .disabled(!model.hasContent)
+                Button("Set Hotkeys to ⌥1–⌥4 (Workspaces)") { model.setWorkspaceHotkeys() }
+                    .disabled(!model.hasContent)
                 Divider()
                 Button("New Layer") { model.addLayer() }
                     .disabled(model.document == nil)

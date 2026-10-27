@@ -409,6 +409,28 @@ final class AppModel {
         (25, .kp("C_MUTE")), (26, .kp("C_VOL_DN")), (27, .kp("C_VOL_UP")),
     ]
 
+    /// The four inner "Hotkeys" on Base send ⌥1–⌥4 (workspace switching in AeroSpace and similar tools).
+    static let workspaceHotkeys: [(key: Int, binding: KeyBinding)] = [
+        (20, .kp("LA(N1)")), (34, .kp("LA(N2)")), (21, .kp("LA(N3)")), (39, .kp("LA(N4)")),
+    ]
+
+    func setWorkspaceHotkeys() {
+        guard !layers.isEmpty else { return }
+        applyPreset(Self.workspaceHotkeys, layer: 0, name: "Set Workspace Hotkeys")
+        flash("Hotkeys now switch workspaces 1–4")
+    }
+
+    private func applyPreset(_ preset: [(key: Int, binding: KeyBinding)], layer li: Int, name: String) {
+        selectedLayerID = layers[li].id
+        selectedKey = nil
+        if isLive {
+            let changes = preset.filter { liveLayers[li].bindings[$0.key] != $0.binding }
+            liveSet(changes, layer: li, name: name)
+        } else {
+            mutate(name) { d in for c in preset { d.layers[li].bindings[c.key] = c.binding } }
+        }
+    }
+
     var fnLayerIndex: Int? {
         layers.firstIndex { $0.displayName.lowercased() == "fn" } ?? (layers.count > 2 ? 2 : nil)
     }

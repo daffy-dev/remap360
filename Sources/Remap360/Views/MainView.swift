@@ -110,6 +110,9 @@ private struct EditorCanvas: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if let update = model.appUpdate {
+                AppUpdateBanner(update: update)
+            }
             if let update = model.firmwareUpdate {
                 FirmwareBanner(update: update)
             }
@@ -365,6 +368,40 @@ private struct LayoutMenu: View {
 }
 
 /// Shown when Kinesis has published firmware newer than what the user has seen.
+private struct AppUpdateBanner: View {
+    @Environment(AppModel.self) private var model
+    let update: AppUpdates.Release
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "arrow.down.circle.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Brand.ink)
+                .frame(width: 28, height: 28)
+                .background(Brand.gradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Remap360 \(update.version) is available")
+                    .font(.callout.weight(.semibold))
+                Text("You have \(AppUpdates.current?.description ?? "an older version"). Open the download and drag it into Applications to replace this one.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Button("What's New") { NSWorkspace.shared.open(update.pageURL) }
+            Button("Download") { NSWorkspace.shared.open(update.downloadURL) }
+                .buttonStyle(.brand)
+            Button("Skip") { model.skipAppUpdate() }
+                .help("Don't remind me about this version")
+        }
+        .controlSize(.small)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Brand.cyan.opacity(0.10))
+        .overlay(alignment: .bottom) { Divider() }
+    }
+}
+
 private struct FirmwareBanner: View {
     @Environment(AppModel.self) private var model
     let update: FirmwareUpdates.Release

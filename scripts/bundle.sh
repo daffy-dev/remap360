@@ -7,14 +7,14 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
-VERSION="1.0.0"
+VERSION="${VERSION:-1.0.1}"
 BUILD=$(git rev-list --count HEAD 2>/dev/null || echo 1)
 APP="$ROOT/build/Remap360.app"
 
 ARCHS=()
 if [ "${UNIVERSAL:-0}" = 1 ]; then ARCHS=(--arch arm64 --arch x86_64); fi
-swift build -c release "${ARCHS[@]}"
-BIN=$(swift build -c release "${ARCHS[@]}" --show-bin-path)/Remap360
+swift build -c release ${ARCHS[@]+"${ARCHS[@]}"}
+BIN=$(swift build -c release ${ARCHS[@]+"${ARCHS[@]}"} --show-bin-path)/Remap360
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"

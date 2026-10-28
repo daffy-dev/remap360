@@ -122,3 +122,11 @@ import Testing
     #expect(MacShortcut.match("LC(UP_ARROW)")?.name == "Mission Control")
     #expect(MacShortcut.match("F11") == nil)
 }
+
+@Test func comparesAppVersions() throws {
+    let v = { (s: String) in try #require(AppVersion(s)) }
+    #expect(try v("v1.0.1") > v("1.0.0"))
+    #expect(try v("1.10") > v("1.9.9"))
+    #expect(try v("1.0") == v("1.0.0"))
+    #expect(AppVersion("v1.0-beta") == nil)
+}

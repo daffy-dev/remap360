@@ -63,6 +63,8 @@ final class AppModel {
 
     /// A Kinesis firmware release newer than what the user has seen, shown as a banner.
     var firmwareUpdate: FirmwareUpdates.Release?
+    /// A newer Remap360 on GitHub Releases, shown as a banner.
+    var appUpdate: AppUpdates.Release?
 
     @ObservationIgnored weak var undoManager: UndoManager?
     @ObservationIgnored private var toastTask: Task<Void, Never>?
@@ -78,6 +80,7 @@ final class AppModel {
         }
         live.start()
         Task { await checkFirmware(manual: false) }
+        Task { await checkAppUpdate(manual: false) }
         // `-selectLayer 2 -selectKey 15` on the command line preselects a key (handy for screenshots).
         let defaults = UserDefaults.standard
         if let l = defaults.string(forKey: "selectLayer").flatMap(Int.init), l < layers.count { selectedLayerID = layers[l].id }
@@ -433,6 +436,28 @@ final class AppModel {
     func dismissFirmwareUpdate() {
         if let update = firmwareUpdate { FirmwareUpdates.lastSeen = update.date }
         firmwareUpdate = nil
+    }
+
+    // MARK: Remap360 updates
+
+    /// Same idea as the firmware check: once per launch, or from the menu.
+    func checkAppUpdate(manual: Bool) async {
+        guard let latest = await AppUpdates.latest(), let current = AppUpdates.current else {
+            if manual { flash("Couldn't reach GitHub to check for updates") }
+            return
+        }
+        let skipped = !manual && AppUpdates.skipped.map { latest.version <= $0 } == true
+        if latest.version > current && !skipped {
+            appUpdate = latest
+        } else {
+            appUpdate = nil
+            if manual { flash("Remap360 \(current) is the latest version") }
+        }
+    }
+
+    func skipAppUpdate() {
+        if let update = appUpdate { AppUpdates.skipped = update.version }
+        appUpdate = nil
     }
 
     // MARK: Layout files (export, import, backups)

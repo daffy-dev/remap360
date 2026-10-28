@@ -18,6 +18,7 @@ struct Remap360App: App {
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About Remap360") { AboutPanel.show() }
+                Button("Check for Remap360 Updates…") { Task { await model.checkAppUpdate(manual: true) } }
             }
             CommandGroup(replacing: .saveItem) {
                 Button("Save") { model.save() }

@@ -11,7 +11,7 @@ DEVELOPER_ID=${DEVELOPER_ID:-$(security find-identity -v -p codesigning | sed -n
 NOTARY_PROFILE=${NOTARY_PROFILE:-pixnip-notary}
 [ -n "$DEVELOPER_ID" ] || { echo "No Developer ID Application certificate found" >&2; exit 1; }
 
-VERSION=$(sed -n 's/^VERSION="\(.*\)"/\1/p' scripts/bundle.sh)
+VERSION=$(sed -n 's/^VERSION="\${VERSION:-\(.*\)}"/\1/p' scripts/bundle.sh)
 OUT="$ROOT/build/release"
 APP="$ROOT/build/Remap360.app"
 DMG="$OUT/Remap360-$VERSION.dmg"

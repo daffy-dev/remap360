@@ -3,7 +3,7 @@
 <p align="center"><b>A visual keymap editor for the Kinesis Advantage360 Pro, made for the Mac.</b><br>
 Plug in, click a key, change it, and it's live on your keyboard instantly.</p>
 
-<p align="center"><img src="docs/screenshots/editor.png" alt="Remap360 editing the Base layer" width="900"></p>
+<p align="center"><img src="docs/screenshots/demo.gif" alt="Changing Esc to Mission Control live on the keyboard, then reverting" width="900"></p>
 
 ## Features
 
@@ -15,6 +15,8 @@ Plug in, click a key, change it, and it's live on your keyboard instantly.</p>
 - **Backups.** Every time you keep changes, your layout is backed up automatically. Export and import layouts as files.
 - **Firmware update notice.** Tells you when Kinesis publishes new firmware.
 - Layers: add, rename, reorder, duplicate. Drag keys to swap them. Copy and paste keys. Full undo.
+
+<p align="center"><img src="docs/screenshots/editor.png" alt="Remap360 editing the Base layer" width="900"></p>
 
 <p align="center"><img src="docs/screenshots/mac-row.png" alt="The Mac row preset on the Fn layer" width="900"></p>
 
